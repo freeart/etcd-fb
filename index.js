@@ -14,6 +14,10 @@ class Storage extends EventEmitter {
         this.options = options
     }
 
+    registry(name, ttl){
+        this.__keepalive(name, ttl);
+    }
+
     watch(key, cb) {
         this.__connect();
         this.whatchers[key] = this.conn.watcher(key);
@@ -35,6 +39,16 @@ class Storage extends EventEmitter {
         if (!this.conn) {
             this.conn = new Etcd(this.connectString, this.options);
         }
+    }
+
+    __keepalive(name, ttl) {
+        this.__connect();
+        this.conn.set(name, process.argv.join(" "), {ttl: 60}, (err) => {
+            if (err) {
+                this.emit("error", err)
+            }
+            setTimeout(() => this.__keepalive(name, ttl), 50000);
+        });
     }
 }
 

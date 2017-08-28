@@ -1,7 +1,9 @@
-var Etcd = require('node-etcd');
+var Etcd = require('node-etcd'),
+    EventEmitter = require('events');
 
-class Storage {
+class Storage extends EventEmitter {
     constructor() {
+        super();
         this.connectString = undefined;
         this.conn = null;
         this.whatchers = {};
@@ -18,10 +20,14 @@ class Storage {
         this.whatchers[key].on("change", (val) => {
             cb(val.node.value)
         });
+        this.whatchers[key].on("error", (err) => {
+            this.emit("error", err)
+        });
         this.conn.get(key, (err, val) => {
-            if (!err) {
-                cb(val.node.value)
+            if (err) {
+                return this.emit("error", err)
             }
+            cb(val.node.value)
         });
     }
 

@@ -14,24 +14,25 @@ class Storage extends EventEmitter {
         this.options = options
     }
 
-    registry(name, ttl){
+    registry(name, ttl) {
         this.__keepalive(name, ttl);
     }
 
     watch(key, cb) {
+        const recursive = key[key.length - 1] == '/' ? true : false;
         this.__connect();
-        this.whatchers[key] = this.conn.watcher(key);
+        this.whatchers[key] = this.conn.watcher(key, null, {recursive});
         this.whatchers[key].on("change", (val) => {
-            cb(val.node.value)
+            cb(recursive ? val.node : val.node.value)
         });
         this.whatchers[key].on("error", (err) => {
             this.emit("error", err)
         });
-        this.conn.get(key, (err, val) => {
+        this.conn.get(key, {recursive}, (err, val) => {
             if (err) {
                 return this.emit("error", err)
             }
-            cb(val.node.value)
+            cb(recursive ? val.node.nodes : val.node.value)
         });
     }
 

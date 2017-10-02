@@ -57,7 +57,7 @@ class Storage extends EventEmitter {
 		let nodes = Array.isArray(nodesOrNode) ? nodesOrNode : [nodesOrNode]
 
 		let obj = {};
-		nodes.forEach((node)=>{
+		nodes.forEach((node) => {
 			obj[node.key.replace(key, '')] = node.value;
 		})
 
@@ -65,4 +65,16 @@ class Storage extends EventEmitter {
 	}
 }
 
-module.exports = new Storage();
+let instance = null;
+
+class Cache {
+	constructor() {
+		if (!instance) {
+			instance = new Storage();
+		}
+
+		return instance;
+	}
+}
+
+module.exports = new Cache();

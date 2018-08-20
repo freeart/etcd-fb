@@ -11,7 +11,8 @@ class Storage extends EventEmitter {
 
 	config(connectStringOrArray, options) {
 		this.connectString = connectStringOrArray;
-		this.options = options
+		this.options = options || {}
+		this.options = Object.assign(this.options, { timeout: 5000 })
 	}
 
 	registry(name, ttl) {
@@ -22,14 +23,14 @@ class Storage extends EventEmitter {
 		key = key[0] == '/' ? key : '/' + key;
 		const recursive = key[key.length - 1] == '/' ? true : false;
 		this.__connect();
-		this.whatchers[key] = this.conn.watcher(key, null, {recursive});
+		this.whatchers[key] = this.conn.watcher(key, null, { recursive, maxRetries: 100 });
 		this.whatchers[key].on("change", (val) => {
 			cb(recursive ? this.__convert(key, val.node) : val.node.value)
 		});
 		this.whatchers[key].on("error", (err) => {
 			this.emit("error", err)
 		});
-		this.conn.get(key, {recursive}, (err, val) => {
+		this.conn.get(key, { recursive, maxRetries: 100 }, (err, val) => {
 			if (err) {
 				return this.emit("error", err)
 			}
@@ -45,7 +46,7 @@ class Storage extends EventEmitter {
 
 	__keepalive(name, ttl) {
 		this.__connect();
-		this.conn.set(name, process.argv.join(" "), {ttl: 60}, (err) => {
+		this.conn.set(name, process.argv.join(" "), { ttl: 60, maxRetries: 100 }, (err) => {
 			if (err) {
 				this.emit("error", err)
 			}

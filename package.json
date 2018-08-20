@@ -1,6 +1,6 @@
 {
   "name": "etcd-fb",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Running etcd as firebase",
   "repository": {
     "type": "git",

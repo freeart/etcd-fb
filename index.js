@@ -1,4 +1,4 @@
-const Etcd = require('./lib'),
+const etcd = require('./lib'),
 	EventEmitter = require('events');
 
 class Storage extends EventEmitter {
@@ -10,32 +10,23 @@ class Storage extends EventEmitter {
 	}
 
 	config(connectStringOrArray, options) {
+		connectStringOrArray = connectStringOrArray.indexOf("//") == -1 ? `http://${connectStringOrArray}` : connectStringOrArray
 		this.connectString = connectStringOrArray;
 		this.options = options || {}
 		this.options = Object.assign(this.options, { timeout: 5000 })
 	}
 
-	mkdir(name, opt, cb) {
-		this.conn.mkdir(name, Object.assign({ maxRetries: 100 }, opt || {}), (err) => {
-			if (err) {
-				this.emit("error", err)
-			}
-			cb(err)
-		});
+	refresh(key, opt, cb) {
+		key = key[0] == '/' ? key : '/' + key;
+		const dir = key[key.length - 1] == '/';
+		this.set(key, null, Object.assign({ maxRetries: 100, dir, refresh: true, prevExist: true }, opt || {}), cb)
 	}
 
-	refresh(name, opt, cb) {
-		this.conn.refresh(name, Object.assign({ maxRetries: 100 }, opt || {}), (err) => {
-			if (err) {
-				this.emit("error", err)
-			}
-			cb(err)
-		});
-	}
-
-	set(name, value, opt, cb) {
+	set(key, value, opt, cb) {
+		key = key[0] == '/' ? key : '/' + key;
+		const dir = key[key.length - 1] == '/';
 		this.__connect();
-		this.conn.set(name, value, Object.assign({ maxRetries: 100 }, opt || {}), (err) => {
+		this.conn.set(key, value, Object.assign({ maxRetries: 100, dir }, opt || {}), (err) => {
 			if (err) {
 				this.emit("error", err)
 			}
@@ -76,7 +67,9 @@ class Storage extends EventEmitter {
 
 	__connect() {
 		if (!this.conn) {
-			this.conn = new Etcd(this.connectString, this.options);
+			this.conn = etcd({
+				url: this.connectString
+			})
 		}
 	}
 

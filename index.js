@@ -9,7 +9,7 @@ class Storage extends EventEmitter {
 		this.whatchers = {};
 	}
 
-	config(connectStringOrArray, options) {
+	config(connectStringOrArray = "http://127.0.0.1:2379", options) {
 		connectStringOrArray = connectStringOrArray.indexOf("//") == -1 ? `http://${connectStringOrArray}` : connectStringOrArray
 		this.connectString = connectStringOrArray;
 		this.options = options || {}

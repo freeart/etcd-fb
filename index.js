@@ -82,7 +82,7 @@ class Storage extends EventEmitter {
 		let obj = {};
 		nodes.forEach((node) => {
 			if (node.key.indexOf(key) !== -1) {
-				obj[node.key.replace(key, '')] = node.value;
+				obj[node.key.replace(key, '')] = node.dir ? this.__convert(`${node.key}/`, node.nodes) : node.value;
 			}
 		})
 
